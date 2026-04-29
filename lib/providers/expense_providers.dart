@@ -19,6 +19,9 @@ class ExpenseListNotifier
     required double amount,
     String currency = 'CNY',
     ExpenseCategory category = ExpenseCategory.other,
+    String paidBy = 'self',                      // 新加
+    String splitMethod = 'aa',                   // 新加（备用）
+    List<String> splitMembers = const [],        // 新加（备用）
     String note = '',
     DateTime? occurredAt,
   }) async {
@@ -28,6 +31,9 @@ class ExpenseListNotifier
       amount: amount,
       currency: currency,
       category: category,
+      paidBy: paidBy,
+      splitMethod: splitMethod,
+      splitMembers: splitMembers,
       note: note,
       occurredAt: occurredAt,
     );

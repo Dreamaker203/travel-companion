@@ -1323,6 +1323,40 @@ class $ExpensesTable extends Expenses with TableInfo<$ExpensesTable, Expense> {
     requiredDuringInsert: false,
     defaultValue: const Constant('other'),
   );
+  static const VerificationMeta _paidByMeta = const VerificationMeta('paidBy');
+  @override
+  late final GeneratedColumn<String> paidBy = GeneratedColumn<String>(
+    'paid_by',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('self'),
+  );
+  static const VerificationMeta _splitMethodMeta = const VerificationMeta(
+    'splitMethod',
+  );
+  @override
+  late final GeneratedColumn<String> splitMethod = GeneratedColumn<String>(
+    'split_method',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('aa'),
+  );
+  static const VerificationMeta _splitMembersMeta = const VerificationMeta(
+    'splitMembers',
+  );
+  @override
+  late final GeneratedColumn<String> splitMembers = GeneratedColumn<String>(
+    'split_members',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
   static const VerificationMeta _noteMeta = const VerificationMeta('note');
   @override
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
@@ -1365,6 +1399,9 @@ class $ExpensesTable extends Expenses with TableInfo<$ExpensesTable, Expense> {
     amount,
     currency,
     category,
+    paidBy,
+    splitMethod,
+    splitMembers,
     note,
     occurredAt,
     createdAt,
@@ -1420,6 +1457,30 @@ class $ExpensesTable extends Expenses with TableInfo<$ExpensesTable, Expense> {
         category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
       );
     }
+    if (data.containsKey('paid_by')) {
+      context.handle(
+        _paidByMeta,
+        paidBy.isAcceptableOrUnknown(data['paid_by']!, _paidByMeta),
+      );
+    }
+    if (data.containsKey('split_method')) {
+      context.handle(
+        _splitMethodMeta,
+        splitMethod.isAcceptableOrUnknown(
+          data['split_method']!,
+          _splitMethodMeta,
+        ),
+      );
+    }
+    if (data.containsKey('split_members')) {
+      context.handle(
+        _splitMembersMeta,
+        splitMembers.isAcceptableOrUnknown(
+          data['split_members']!,
+          _splitMembersMeta,
+        ),
+      );
+    }
     if (data.containsKey('note')) {
       context.handle(
         _noteMeta,
@@ -1471,6 +1532,18 @@ class $ExpensesTable extends Expenses with TableInfo<$ExpensesTable, Expense> {
         DriftSqlType.string,
         data['${effectivePrefix}category'],
       )!,
+      paidBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}paid_by'],
+      )!,
+      splitMethod: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}split_method'],
+      )!,
+      splitMembers: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}split_members'],
+      )!,
       note: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}note'],
@@ -1499,6 +1572,9 @@ class Expense extends DataClass implements Insertable<Expense> {
   final double amount;
   final String currency;
   final String category;
+  final String paidBy;
+  final String splitMethod;
+  final String splitMembers;
   final String note;
   final DateTime occurredAt;
   final DateTime createdAt;
@@ -1509,6 +1585,9 @@ class Expense extends DataClass implements Insertable<Expense> {
     required this.amount,
     required this.currency,
     required this.category,
+    required this.paidBy,
+    required this.splitMethod,
+    required this.splitMembers,
     required this.note,
     required this.occurredAt,
     required this.createdAt,
@@ -1524,6 +1603,9 @@ class Expense extends DataClass implements Insertable<Expense> {
     map['amount'] = Variable<double>(amount);
     map['currency'] = Variable<String>(currency);
     map['category'] = Variable<String>(category);
+    map['paid_by'] = Variable<String>(paidBy);
+    map['split_method'] = Variable<String>(splitMethod);
+    map['split_members'] = Variable<String>(splitMembers);
     map['note'] = Variable<String>(note);
     map['occurred_at'] = Variable<DateTime>(occurredAt);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -1540,6 +1622,9 @@ class Expense extends DataClass implements Insertable<Expense> {
       amount: Value(amount),
       currency: Value(currency),
       category: Value(category),
+      paidBy: Value(paidBy),
+      splitMethod: Value(splitMethod),
+      splitMembers: Value(splitMembers),
       note: Value(note),
       occurredAt: Value(occurredAt),
       createdAt: Value(createdAt),
@@ -1558,6 +1643,9 @@ class Expense extends DataClass implements Insertable<Expense> {
       amount: serializer.fromJson<double>(json['amount']),
       currency: serializer.fromJson<String>(json['currency']),
       category: serializer.fromJson<String>(json['category']),
+      paidBy: serializer.fromJson<String>(json['paidBy']),
+      splitMethod: serializer.fromJson<String>(json['splitMethod']),
+      splitMembers: serializer.fromJson<String>(json['splitMembers']),
       note: serializer.fromJson<String>(json['note']),
       occurredAt: serializer.fromJson<DateTime>(json['occurredAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -1573,6 +1661,9 @@ class Expense extends DataClass implements Insertable<Expense> {
       'amount': serializer.toJson<double>(amount),
       'currency': serializer.toJson<String>(currency),
       'category': serializer.toJson<String>(category),
+      'paidBy': serializer.toJson<String>(paidBy),
+      'splitMethod': serializer.toJson<String>(splitMethod),
+      'splitMembers': serializer.toJson<String>(splitMembers),
       'note': serializer.toJson<String>(note),
       'occurredAt': serializer.toJson<DateTime>(occurredAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -1586,6 +1677,9 @@ class Expense extends DataClass implements Insertable<Expense> {
     double? amount,
     String? currency,
     String? category,
+    String? paidBy,
+    String? splitMethod,
+    String? splitMembers,
     String? note,
     DateTime? occurredAt,
     DateTime? createdAt,
@@ -1596,6 +1690,9 @@ class Expense extends DataClass implements Insertable<Expense> {
     amount: amount ?? this.amount,
     currency: currency ?? this.currency,
     category: category ?? this.category,
+    paidBy: paidBy ?? this.paidBy,
+    splitMethod: splitMethod ?? this.splitMethod,
+    splitMembers: splitMembers ?? this.splitMembers,
     note: note ?? this.note,
     occurredAt: occurredAt ?? this.occurredAt,
     createdAt: createdAt ?? this.createdAt,
@@ -1610,6 +1707,13 @@ class Expense extends DataClass implements Insertable<Expense> {
       amount: data.amount.present ? data.amount.value : this.amount,
       currency: data.currency.present ? data.currency.value : this.currency,
       category: data.category.present ? data.category.value : this.category,
+      paidBy: data.paidBy.present ? data.paidBy.value : this.paidBy,
+      splitMethod: data.splitMethod.present
+          ? data.splitMethod.value
+          : this.splitMethod,
+      splitMembers: data.splitMembers.present
+          ? data.splitMembers.value
+          : this.splitMembers,
       note: data.note.present ? data.note.value : this.note,
       occurredAt: data.occurredAt.present
           ? data.occurredAt.value
@@ -1627,6 +1731,9 @@ class Expense extends DataClass implements Insertable<Expense> {
           ..write('amount: $amount, ')
           ..write('currency: $currency, ')
           ..write('category: $category, ')
+          ..write('paidBy: $paidBy, ')
+          ..write('splitMethod: $splitMethod, ')
+          ..write('splitMembers: $splitMembers, ')
           ..write('note: $note, ')
           ..write('occurredAt: $occurredAt, ')
           ..write('createdAt: $createdAt')
@@ -1642,6 +1749,9 @@ class Expense extends DataClass implements Insertable<Expense> {
     amount,
     currency,
     category,
+    paidBy,
+    splitMethod,
+    splitMembers,
     note,
     occurredAt,
     createdAt,
@@ -1656,6 +1766,9 @@ class Expense extends DataClass implements Insertable<Expense> {
           other.amount == this.amount &&
           other.currency == this.currency &&
           other.category == this.category &&
+          other.paidBy == this.paidBy &&
+          other.splitMethod == this.splitMethod &&
+          other.splitMembers == this.splitMembers &&
           other.note == this.note &&
           other.occurredAt == this.occurredAt &&
           other.createdAt == this.createdAt);
@@ -1668,6 +1781,9 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
   final Value<double> amount;
   final Value<String> currency;
   final Value<String> category;
+  final Value<String> paidBy;
+  final Value<String> splitMethod;
+  final Value<String> splitMembers;
   final Value<String> note;
   final Value<DateTime> occurredAt;
   final Value<DateTime> createdAt;
@@ -1679,6 +1795,9 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
     this.amount = const Value.absent(),
     this.currency = const Value.absent(),
     this.category = const Value.absent(),
+    this.paidBy = const Value.absent(),
+    this.splitMethod = const Value.absent(),
+    this.splitMembers = const Value.absent(),
     this.note = const Value.absent(),
     this.occurredAt = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -1691,6 +1810,9 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
     required double amount,
     this.currency = const Value.absent(),
     this.category = const Value.absent(),
+    this.paidBy = const Value.absent(),
+    this.splitMethod = const Value.absent(),
+    this.splitMembers = const Value.absent(),
     this.note = const Value.absent(),
     this.occurredAt = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -1705,6 +1827,9 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
     Expression<double>? amount,
     Expression<String>? currency,
     Expression<String>? category,
+    Expression<String>? paidBy,
+    Expression<String>? splitMethod,
+    Expression<String>? splitMembers,
     Expression<String>? note,
     Expression<DateTime>? occurredAt,
     Expression<DateTime>? createdAt,
@@ -1717,6 +1842,9 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
       if (amount != null) 'amount': amount,
       if (currency != null) 'currency': currency,
       if (category != null) 'category': category,
+      if (paidBy != null) 'paid_by': paidBy,
+      if (splitMethod != null) 'split_method': splitMethod,
+      if (splitMembers != null) 'split_members': splitMembers,
       if (note != null) 'note': note,
       if (occurredAt != null) 'occurred_at': occurredAt,
       if (createdAt != null) 'created_at': createdAt,
@@ -1731,6 +1859,9 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
     Value<double>? amount,
     Value<String>? currency,
     Value<String>? category,
+    Value<String>? paidBy,
+    Value<String>? splitMethod,
+    Value<String>? splitMembers,
     Value<String>? note,
     Value<DateTime>? occurredAt,
     Value<DateTime>? createdAt,
@@ -1743,6 +1874,9 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
       amount: amount ?? this.amount,
       currency: currency ?? this.currency,
       category: category ?? this.category,
+      paidBy: paidBy ?? this.paidBy,
+      splitMethod: splitMethod ?? this.splitMethod,
+      splitMembers: splitMembers ?? this.splitMembers,
       note: note ?? this.note,
       occurredAt: occurredAt ?? this.occurredAt,
       createdAt: createdAt ?? this.createdAt,
@@ -1771,6 +1905,15 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
     if (category.present) {
       map['category'] = Variable<String>(category.value);
     }
+    if (paidBy.present) {
+      map['paid_by'] = Variable<String>(paidBy.value);
+    }
+    if (splitMethod.present) {
+      map['split_method'] = Variable<String>(splitMethod.value);
+    }
+    if (splitMembers.present) {
+      map['split_members'] = Variable<String>(splitMembers.value);
+    }
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
@@ -1795,8 +1938,373 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
           ..write('amount: $amount, ')
           ..write('currency: $currency, ')
           ..write('category: $category, ')
+          ..write('paidBy: $paidBy, ')
+          ..write('splitMethod: $splitMethod, ')
+          ..write('splitMembers: $splitMembers, ')
           ..write('note: $note, ')
           ..write('occurredAt: $occurredAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CompanionsTable extends Companions
+    with TableInfo<$CompanionsTable, Companion> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CompanionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tripIdMeta = const VerificationMeta('tripId');
+  @override
+  late final GeneratedColumn<String> tripId = GeneratedColumn<String>(
+    'trip_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES trips (id)',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _avatarColorMeta = const VerificationMeta(
+    'avatarColor',
+  );
+  @override
+  late final GeneratedColumn<int> avatarColor = GeneratedColumn<int>(
+    'avatar_color',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0xFF534AB7),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tripId,
+    name,
+    avatarColor,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'companions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Companion> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('trip_id')) {
+      context.handle(
+        _tripIdMeta,
+        tripId.isAcceptableOrUnknown(data['trip_id']!, _tripIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tripIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('avatar_color')) {
+      context.handle(
+        _avatarColorMeta,
+        avatarColor.isAcceptableOrUnknown(
+          data['avatar_color']!,
+          _avatarColorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Companion map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Companion(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tripId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}trip_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      avatarColor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}avatar_color'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CompanionsTable createAlias(String alias) {
+    return $CompanionsTable(attachedDatabase, alias);
+  }
+}
+
+class Companion extends DataClass implements Insertable<Companion> {
+  final String id;
+  final String tripId;
+  final String name;
+  final int avatarColor;
+  final DateTime createdAt;
+  const Companion({
+    required this.id,
+    required this.tripId,
+    required this.name,
+    required this.avatarColor,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['trip_id'] = Variable<String>(tripId);
+    map['name'] = Variable<String>(name);
+    map['avatar_color'] = Variable<int>(avatarColor);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  CompanionsCompanion toCompanion(bool nullToAbsent) {
+    return CompanionsCompanion(
+      id: Value(id),
+      tripId: Value(tripId),
+      name: Value(name),
+      avatarColor: Value(avatarColor),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory Companion.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Companion(
+      id: serializer.fromJson<String>(json['id']),
+      tripId: serializer.fromJson<String>(json['tripId']),
+      name: serializer.fromJson<String>(json['name']),
+      avatarColor: serializer.fromJson<int>(json['avatarColor']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tripId': serializer.toJson<String>(tripId),
+      'name': serializer.toJson<String>(name),
+      'avatarColor': serializer.toJson<int>(avatarColor),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  Companion copyWith({
+    String? id,
+    String? tripId,
+    String? name,
+    int? avatarColor,
+    DateTime? createdAt,
+  }) => Companion(
+    id: id ?? this.id,
+    tripId: tripId ?? this.tripId,
+    name: name ?? this.name,
+    avatarColor: avatarColor ?? this.avatarColor,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  Companion copyWithCompanion(CompanionsCompanion data) {
+    return Companion(
+      id: data.id.present ? data.id.value : this.id,
+      tripId: data.tripId.present ? data.tripId.value : this.tripId,
+      name: data.name.present ? data.name.value : this.name,
+      avatarColor: data.avatarColor.present
+          ? data.avatarColor.value
+          : this.avatarColor,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Companion(')
+          ..write('id: $id, ')
+          ..write('tripId: $tripId, ')
+          ..write('name: $name, ')
+          ..write('avatarColor: $avatarColor, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, tripId, name, avatarColor, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Companion &&
+          other.id == this.id &&
+          other.tripId == this.tripId &&
+          other.name == this.name &&
+          other.avatarColor == this.avatarColor &&
+          other.createdAt == this.createdAt);
+}
+
+class CompanionsCompanion extends UpdateCompanion<Companion> {
+  final Value<String> id;
+  final Value<String> tripId;
+  final Value<String> name;
+  final Value<int> avatarColor;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const CompanionsCompanion({
+    this.id = const Value.absent(),
+    this.tripId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.avatarColor = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CompanionsCompanion.insert({
+    required String id,
+    required String tripId,
+    required String name,
+    this.avatarColor = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       tripId = Value(tripId),
+       name = Value(name);
+  static Insertable<Companion> custom({
+    Expression<String>? id,
+    Expression<String>? tripId,
+    Expression<String>? name,
+    Expression<int>? avatarColor,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tripId != null) 'trip_id': tripId,
+      if (name != null) 'name': name,
+      if (avatarColor != null) 'avatar_color': avatarColor,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CompanionsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? tripId,
+    Value<String>? name,
+    Value<int>? avatarColor,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return CompanionsCompanion(
+      id: id ?? this.id,
+      tripId: tripId ?? this.tripId,
+      name: name ?? this.name,
+      avatarColor: avatarColor ?? this.avatarColor,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tripId.present) {
+      map['trip_id'] = Variable<String>(tripId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (avatarColor.present) {
+      map['avatar_color'] = Variable<int>(avatarColor.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionsCompanion(')
+          ..write('id: $id, ')
+          ..write('tripId: $tripId, ')
+          ..write('name: $name, ')
+          ..write('avatarColor: $avatarColor, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -1810,6 +2318,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TripsTable trips = $TripsTable(this);
   late final $ActivitiesTable activities = $ActivitiesTable(this);
   late final $ExpensesTable expenses = $ExpensesTable(this);
+  late final $CompanionsTable companions = $CompanionsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1818,6 +2327,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     trips,
     activities,
     expenses,
+    companions,
   ];
 }
 
@@ -1884,6 +2394,24 @@ final class $$TripsTableReferences
     ).filter((f) => f.tripId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_expensesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$CompanionsTable, List<Companion>>
+  _companionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.companions,
+    aliasName: $_aliasNameGenerator(db.trips.id, db.companions.tripId),
+  );
+
+  $$CompanionsTableProcessedTableManager get companionsRefs {
+    final manager = $$CompanionsTableTableManager(
+      $_db,
+      $_db.companions,
+    ).filter((f) => f.tripId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_companionsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -1984,6 +2512,31 @@ class $$TripsTableFilterComposer extends Composer<_$AppDatabase, $TripsTable> {
           }) => $$ExpensesTableFilterComposer(
             $db: $db,
             $table: $db.expenses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> companionsRefs(
+    Expression<bool> Function($$CompanionsTableFilterComposer f) f,
+  ) {
+    final $$CompanionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.companions,
+      getReferencedColumn: (t) => t.tripId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CompanionsTableFilterComposer(
+            $db: $db,
+            $table: $db.companions,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -2138,6 +2691,31 @@ class $$TripsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> companionsRefs<T extends Object>(
+    Expression<T> Function($$CompanionsTableAnnotationComposer a) f,
+  ) {
+    final $$CompanionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.companions,
+      getReferencedColumn: (t) => t.tripId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CompanionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.companions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$TripsTableTableManager
@@ -2153,7 +2731,11 @@ class $$TripsTableTableManager
           $$TripsTableUpdateCompanionBuilder,
           (Trip, $$TripsTableReferences),
           Trip,
-          PrefetchHooks Function({bool activitiesRefs, bool expensesRefs})
+          PrefetchHooks Function({
+            bool activitiesRefs,
+            bool expensesRefs,
+            bool companionsRefs,
+          })
         > {
   $$TripsTableTableManager(_$AppDatabase db, $TripsTable table)
     : super(
@@ -2221,12 +2803,17 @@ class $$TripsTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({activitiesRefs = false, expensesRefs = false}) {
+              ({
+                activitiesRefs = false,
+                expensesRefs = false,
+                companionsRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (activitiesRefs) db.activities,
                     if (expensesRefs) db.expenses,
+                    if (companionsRefs) db.companions,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -2265,6 +2852,23 @@ class $$TripsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (companionsRefs)
+                        await $_getPrefetchedData<Trip, $TripsTable, Companion>(
+                          currentTable: table,
+                          referencedTable: $$TripsTableReferences
+                              ._companionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$TripsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).companionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.tripId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -2285,7 +2889,11 @@ typedef $$TripsTableProcessedTableManager =
       $$TripsTableUpdateCompanionBuilder,
       (Trip, $$TripsTableReferences),
       Trip,
-      PrefetchHooks Function({bool activitiesRefs, bool expensesRefs})
+      PrefetchHooks Function({
+        bool activitiesRefs,
+        bool expensesRefs,
+        bool companionsRefs,
+      })
     >;
 typedef $$ActivitiesTableCreateCompanionBuilder =
     ActivitiesCompanion Function({
@@ -2752,6 +3360,9 @@ typedef $$ExpensesTableCreateCompanionBuilder =
       required double amount,
       Value<String> currency,
       Value<String> category,
+      Value<String> paidBy,
+      Value<String> splitMethod,
+      Value<String> splitMembers,
       Value<String> note,
       Value<DateTime> occurredAt,
       Value<DateTime> createdAt,
@@ -2765,6 +3376,9 @@ typedef $$ExpensesTableUpdateCompanionBuilder =
       Value<double> amount,
       Value<String> currency,
       Value<String> category,
+      Value<String> paidBy,
+      Value<String> splitMethod,
+      Value<String> splitMembers,
       Value<String> note,
       Value<DateTime> occurredAt,
       Value<DateTime> createdAt,
@@ -2825,6 +3439,21 @@ class $$ExpensesTableFilterComposer
 
   ColumnFilters<String> get category => $composableBuilder(
     column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paidBy => $composableBuilder(
+    column: $table.paidBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get splitMethod => $composableBuilder(
+    column: $table.splitMethod,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get splitMembers => $composableBuilder(
+    column: $table.splitMembers,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2901,6 +3530,21 @@ class $$ExpensesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get paidBy => $composableBuilder(
+    column: $table.paidBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get splitMethod => $composableBuilder(
+    column: $table.splitMethod,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get splitMembers => $composableBuilder(
+    column: $table.splitMembers,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get note => $composableBuilder(
     column: $table.note,
     builder: (column) => ColumnOrderings(column),
@@ -2965,6 +3609,19 @@ class $$ExpensesTableAnnotationComposer
 
   GeneratedColumn<String> get category =>
       $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get paidBy =>
+      $composableBuilder(column: $table.paidBy, builder: (column) => column);
+
+  GeneratedColumn<String> get splitMethod => $composableBuilder(
+    column: $table.splitMethod,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get splitMembers => $composableBuilder(
+    column: $table.splitMembers,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
@@ -3035,6 +3692,9 @@ class $$ExpensesTableTableManager
                 Value<double> amount = const Value.absent(),
                 Value<String> currency = const Value.absent(),
                 Value<String> category = const Value.absent(),
+                Value<String> paidBy = const Value.absent(),
+                Value<String> splitMethod = const Value.absent(),
+                Value<String> splitMembers = const Value.absent(),
                 Value<String> note = const Value.absent(),
                 Value<DateTime> occurredAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -3046,6 +3706,9 @@ class $$ExpensesTableTableManager
                 amount: amount,
                 currency: currency,
                 category: category,
+                paidBy: paidBy,
+                splitMethod: splitMethod,
+                splitMembers: splitMembers,
                 note: note,
                 occurredAt: occurredAt,
                 createdAt: createdAt,
@@ -3059,6 +3722,9 @@ class $$ExpensesTableTableManager
                 required double amount,
                 Value<String> currency = const Value.absent(),
                 Value<String> category = const Value.absent(),
+                Value<String> paidBy = const Value.absent(),
+                Value<String> splitMethod = const Value.absent(),
+                Value<String> splitMembers = const Value.absent(),
                 Value<String> note = const Value.absent(),
                 Value<DateTime> occurredAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -3070,6 +3736,9 @@ class $$ExpensesTableTableManager
                 amount: amount,
                 currency: currency,
                 category: category,
+                paidBy: paidBy,
+                splitMethod: splitMethod,
+                splitMembers: splitMembers,
                 note: note,
                 occurredAt: occurredAt,
                 createdAt: createdAt,
@@ -3142,6 +3811,326 @@ typedef $$ExpensesTableProcessedTableManager =
       Expense,
       PrefetchHooks Function({bool tripId})
     >;
+typedef $$CompanionsTableCreateCompanionBuilder =
+    CompanionsCompanion Function({
+      required String id,
+      required String tripId,
+      required String name,
+      Value<int> avatarColor,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$CompanionsTableUpdateCompanionBuilder =
+    CompanionsCompanion Function({
+      Value<String> id,
+      Value<String> tripId,
+      Value<String> name,
+      Value<int> avatarColor,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+final class $$CompanionsTableReferences
+    extends BaseReferences<_$AppDatabase, $CompanionsTable, Companion> {
+  $$CompanionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $TripsTable _tripIdTable(_$AppDatabase db) => db.trips.createAlias(
+    $_aliasNameGenerator(db.companions.tripId, db.trips.id),
+  );
+
+  $$TripsTableProcessedTableManager get tripId {
+    final $_column = $_itemColumn<String>('trip_id')!;
+
+    final manager = $$TripsTableTableManager(
+      $_db,
+      $_db.trips,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_tripIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$CompanionsTableFilterComposer
+    extends Composer<_$AppDatabase, $CompanionsTable> {
+  $$CompanionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get avatarColor => $composableBuilder(
+    column: $table.avatarColor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$TripsTableFilterComposer get tripId {
+    final $$TripsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tripId,
+      referencedTable: $db.trips,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TripsTableFilterComposer(
+            $db: $db,
+            $table: $db.trips,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CompanionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CompanionsTable> {
+  $$CompanionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get avatarColor => $composableBuilder(
+    column: $table.avatarColor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$TripsTableOrderingComposer get tripId {
+    final $$TripsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tripId,
+      referencedTable: $db.trips,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TripsTableOrderingComposer(
+            $db: $db,
+            $table: $db.trips,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CompanionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CompanionsTable> {
+  $$CompanionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get avatarColor => $composableBuilder(
+    column: $table.avatarColor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$TripsTableAnnotationComposer get tripId {
+    final $$TripsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tripId,
+      referencedTable: $db.trips,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TripsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.trips,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CompanionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CompanionsTable,
+          Companion,
+          $$CompanionsTableFilterComposer,
+          $$CompanionsTableOrderingComposer,
+          $$CompanionsTableAnnotationComposer,
+          $$CompanionsTableCreateCompanionBuilder,
+          $$CompanionsTableUpdateCompanionBuilder,
+          (Companion, $$CompanionsTableReferences),
+          Companion,
+          PrefetchHooks Function({bool tripId})
+        > {
+  $$CompanionsTableTableManager(_$AppDatabase db, $CompanionsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CompanionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CompanionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CompanionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> tripId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> avatarColor = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CompanionsCompanion(
+                id: id,
+                tripId: tripId,
+                name: name,
+                avatarColor: avatarColor,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String tripId,
+                required String name,
+                Value<int> avatarColor = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CompanionsCompanion.insert(
+                id: id,
+                tripId: tripId,
+                name: name,
+                avatarColor: avatarColor,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$CompanionsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({tripId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (tripId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.tripId,
+                                referencedTable: $$CompanionsTableReferences
+                                    ._tripIdTable(db),
+                                referencedColumn: $$CompanionsTableReferences
+                                    ._tripIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CompanionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CompanionsTable,
+      Companion,
+      $$CompanionsTableFilterComposer,
+      $$CompanionsTableOrderingComposer,
+      $$CompanionsTableAnnotationComposer,
+      $$CompanionsTableCreateCompanionBuilder,
+      $$CompanionsTableUpdateCompanionBuilder,
+      (Companion, $$CompanionsTableReferences),
+      Companion,
+      PrefetchHooks Function({bool tripId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3152,4 +4141,6 @@ class $AppDatabaseManager {
       $$ActivitiesTableTableManager(_db, _db.activities);
   $$ExpensesTableTableManager get expenses =>
       $$ExpensesTableTableManager(_db, _db.expenses);
+  $$CompanionsTableTableManager get companions =>
+      $$CompanionsTableTableManager(_db, _db.companions);
 }

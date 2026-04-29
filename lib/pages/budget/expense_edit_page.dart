@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../models/companion.dart';
 import '../../models/expense.dart';
+import '../../providers/companion_providers.dart';
 import '../../providers/expense_providers.dart';
 import '../../theme/app_theme.dart';
 
@@ -20,6 +22,7 @@ class ExpenseEditPage extends ConsumerStatefulWidget {
 
 class _ExpenseEditPageState extends ConsumerState<ExpenseEditPage> {
   late ExpenseCategory _category;
+  late String _paidBy; // 'self' 或 companionId
   late TextEditingController _amountController;
   late TextEditingController _noteController;
   bool _saving = false;
@@ -35,6 +38,7 @@ class _ExpenseEditPageState extends ConsumerState<ExpenseEditPage> {
       text: e == null ? '' : e.amount.toStringAsFixed(0),
     );
     _noteController = TextEditingController(text: e?.note ?? '');
+    _paidBy = e?.paidBy ?? 'self';
   }
 
   @override
@@ -45,44 +49,46 @@ class _ExpenseEditPageState extends ConsumerState<ExpenseEditPage> {
   }
 
   Future<void> _save() async {
-    final amount = double.tryParse(_amountController.text);
-    if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请填写有效金额')),
-      );
-      return;
-    }
-    setState(() => _saving = true);
-    try {
-      if (_isEdit) {
-        final updated = widget.existing!.copyWith(
-          amount: amount,
-          category: _category,
-          note: _noteController.text.trim(),
-        );
-        await ref
-            .read(expenseListProvider(widget.tripId).notifier)
-            .updateExpense(updated);
-      } else {
-        await ref
-            .read(expenseListProvider(widget.tripId).notifier)
-            .createExpense(
-              amount: amount,
-              category: _category,
-              note: _noteController.text.trim(),
-            );
-      }
-      if (mounted) Navigator.pop(context, true);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('保存失败：$e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
+  final amount = double.tryParse(_amountController.text);
+  if (amount == null || amount <= 0) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('请填写有效金额')),
+    );
+    return;
   }
+  setState(() => _saving = true);
+  try {
+    if (_isEdit) {
+      final updated = widget.existing!.copyWith(
+        amount: amount,
+        category: _category,
+        paidBy: _paidBy,                       // 加这一行
+        note: _noteController.text.trim(),
+      );
+      await ref
+          .read(expenseListProvider(widget.tripId).notifier)
+          .updateExpense(updated);
+    } else {
+      await ref
+          .read(expenseListProvider(widget.tripId).notifier)
+          .createExpense(
+            amount: amount,
+            category: _category,
+            paidBy: _paidBy,
+            note: _noteController.text.trim(),
+          );
+    }
+    if (mounted) Navigator.pop(context, true);
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('保存失败：$e')),
+      );
+    }
+  } finally {
+    if (mounted) setState(() => _saving = false);
+  }
+}
 
   Future<void> _delete() async {
     final confirmed = await showDialog<bool>(
@@ -193,6 +199,23 @@ class _ExpenseEditPageState extends ConsumerState<ExpenseEditPage> {
           _buildLabel('类别'),
           _buildCategorySelector(),
           const SizedBox(height: 22),
+          // === 在 _buildLabel('备注（可选）'), 之前插入这段 ===
+          _buildLabel('谁付的'),
+          Consumer(
+            builder: (context, ref, _) {
+              final companionsAsync =
+                  ref.watch(companionListProvider(widget.tripId));
+              return companionsAsync.when(
+                loading: () => const SizedBox(
+                  height: 40,
+                  child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                ),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (companions) => _buildPayerSelector(companions),
+              );
+            },
+          ),
+          const SizedBox(height: 22),
           _buildLabel('备注（可选）'),
           TextField(
             controller: _noteController,
@@ -279,4 +302,72 @@ class _ExpenseEditPageState extends ConsumerState<ExpenseEditPage> {
       }).toList(),
     );
   }
+  Widget _buildPayerSelector(List<TripCompanion> companions) {
+  // 选项：组织者自己 + 所有同行者
+  final options = <(String, String, Color)>[
+    ('self', '我', AppTheme.primary),
+    ...companions.map((c) => (c.id, c.name, c.color)),
+  ];
+
+  return Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: options.map((option) {
+      final id = option.$1;
+      final name = option.$2;
+      final color = option.$3;
+      final selected = id == _paidBy;
+      return GestureDetector(
+        onTap: () => setState(() => _paidBy = id),
+        child: Container(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected ? color.withValues(alpha: 0.12) : Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: selected ? color : AppTheme.border,
+              width: selected ? 1.5 : 0.5,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    id == 'self'
+                        ? '我'
+                        : (name.isEmpty ? '?' : name.substring(0, 1)),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                name,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: selected ? color : AppTheme.textSecondary,
+                  fontWeight:
+                      selected ? FontWeight.w500 : FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }).toList(),
+  );
+}
 }

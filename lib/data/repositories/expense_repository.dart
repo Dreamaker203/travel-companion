@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 import '../database/database.dart' as db;
@@ -23,6 +24,9 @@ class ExpenseRepository {
     required double amount,
     String currency = 'CNY',
     ExpenseCategory category = ExpenseCategory.other,
+    String paidBy = 'self',
+    String splitMethod = 'aa',
+    List<String> splitMembers = const [],
     String note = '',
     DateTime? occurredAt,
   }) async {
@@ -34,6 +38,9 @@ class ExpenseRepository {
       amount: amount,
       currency: Value(currency),
       category: Value(category.name),
+      paidBy: Value(paidBy),
+      splitMethod: Value(splitMethod),
+      splitMembers: Value(jsonEncode(splitMembers)),
       note: Value(note),
       occurredAt: Value(occurredAt ?? DateTime.now()),
     );
@@ -49,6 +56,9 @@ class ExpenseRepository {
       amount: Value(expense.amount),
       currency: Value(expense.currency),
       category: Value(expense.category.name),
+      paidBy: Value(expense.paidBy),
+      splitMethod: Value(expense.splitMethod),
+      splitMembers: Value(jsonEncode(expense.splitMembers)),
       note: Value(expense.note),
       occurredAt: Value(expense.occurredAt),
     ));
@@ -59,6 +69,16 @@ class ExpenseRepository {
   }
 
   Expense _toModel(db.Expense row) {
+    List<String> members = const [];
+    try {
+      final decoded = jsonDecode(row.splitMembers);
+      if (decoded is List) {
+        members = decoded.map((e) => e.toString()).toList();
+      }
+    } catch (_) {
+      // JSON 解析失败就用空数组，不阻塞
+    }
+
     return Expense(
       id: row.id,
       tripId: row.tripId,
@@ -69,6 +89,9 @@ class ExpenseRepository {
         (c) => c.name == row.category,
         orElse: () => ExpenseCategory.other,
       ),
+      paidBy: row.paidBy,
+      splitMethod: row.splitMethod,
+      splitMembers: members,
       note: row.note,
       occurredAt: row.occurredAt,
       createdAt: row.createdAt,

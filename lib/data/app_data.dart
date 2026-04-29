@@ -2,6 +2,7 @@ import 'database/database.dart';
 import 'repositories/trip_repository.dart';
 import 'repositories/activity_repository.dart';
 import 'repositories/expense_repository.dart';
+import 'repositories/companion_repository.dart'; 
 
 class AppData {
   static final AppData _instance = AppData._internal();
@@ -12,11 +13,13 @@ class AppData {
   late final TripRepository tripRepo;
   late final ActivityRepository activityRepo;
   late final ExpenseRepository expenseRepo;
+  late final CompanionRepository companionRepo; 
 
   void init() {
     database = AppDatabase();
     tripRepo = TripRepository(database);
     activityRepo = ActivityRepository(database);
     expenseRepo = ExpenseRepository(database);
+    companionRepo = CompanionRepository(database); 
   }
 }

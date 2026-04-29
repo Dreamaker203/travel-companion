@@ -6,6 +6,8 @@ import '../../models/trip.dart';
 import '../../providers/expense_providers.dart';
 import '../../theme/app_theme.dart';
 import 'expense_edit_page.dart';
+import '../companions/companions_page.dart';
+import '../settlement/settlement_page.dart';
 
 class BudgetPage extends ConsumerWidget {
   final Trip trip;
@@ -36,6 +38,32 @@ class BudgetPage extends ConsumerWidget {
           ],
         ),
         toolbarHeight: 64,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.people_outline, size: 20),
+            tooltip: '同行者',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CompanionsPage(tripId: trip.id),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.receipt_long_outlined, size: 20),
+            tooltip: '账单结算',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SettlementPage(tripId: trip.id),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: expensesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
