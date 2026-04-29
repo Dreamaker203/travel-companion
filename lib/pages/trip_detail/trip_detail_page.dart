@@ -18,7 +18,7 @@ class TripDetailPage extends ConsumerStatefulWidget {
 }
 
 class _TripDetailPageState extends ConsumerState<TripDetailPage> {
-  int _selectedDay = 1;
+  int _selectedDay = 1; // 0 = 待定池，1+ = 具体某天
 
   int get _totalDays => widget.trip.totalDays;
 
@@ -47,6 +47,90 @@ class _TripDetailPageState extends ConsumerState<TripDetailPage> {
       ),
     );
   }
+  
+  Future<void> _onMoveToDay(TripActivity act) async {
+  final selected = await showModalBottomSheet<int>(
+    context: context,
+    builder: (ctx) {
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '安排到哪一天？',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                act.title,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: List.generate(_totalDays, (i) {
+                  final dayNum = i + 1;
+                  final date = widget.trip.startDate
+                      .add(Duration(days: i));
+                  return GestureDetector(
+                    onTap: () => Navigator.pop(ctx, dayNum),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryBg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'D$dayNum',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                          Text(
+                            DateFormat('M/d').format(date),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+  if (selected != null) {
+    await ref
+        .read(activityListProvider(widget.trip.id).notifier)
+        .moveActivityToDay(act.id, selected);
+    if (mounted) {
+      // 切换到那一天，让用户看到效果
+      setState(() => _selectedDay = selected);
+    }
+  }
+}
 
   Future<void> _onExportPdf(List<TripActivity> activities) async {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -163,9 +247,9 @@ class _TripDetailPageState extends ConsumerState<TripDetailPage> {
                     style: const TextStyle(color: Colors.red)),
               ),
               data: (all) {
-                final today = all
-                    .where((a) => a.dayNumber == _selectedDay)
-                    .toList();
+                final today = _selectedDay == 0
+                    ? all.where((a) => a.dayNumber == 0).toList()
+                    : all.where((a) => a.dayNumber == _selectedDay).toList();
                 if (today.isEmpty) return _buildEmpty();
                 return ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
@@ -175,6 +259,15 @@ class _TripDetailPageState extends ConsumerState<TripDetailPage> {
                     return ActivityTile(
                       activity: act,
                       onTap: () => _onEditActivity(act),
+                      // 待定池里的活动支持"移到某天"
+                      trailing: _selectedDay == 0
+                          ? IconButton(
+                              icon: const Icon(Icons.add_circle_outline, size: 20),
+                              color: AppTheme.primary,
+                              tooltip: '安排到具体某天',
+                              onPressed: () => _onMoveToDay(act),
+                            )
+                          : null,
                     );
                   },
                 );
@@ -192,56 +285,124 @@ class _TripDetailPageState extends ConsumerState<TripDetailPage> {
   }
 
   Widget _buildDayTabs(DateFormat dateFmt) {
+    final activitiesAsync = ref.watch(activityListProvider(widget.trip.id));
+    final pendingCount = activitiesAsync.maybeWhen(
+      data: (list) => list.where((a) => a.dayNumber == 0).length,
+      orElse: () => 0,
+    );
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
-        children: List.generate(_totalDays, (i) {
-          final dayNum = i + 1;
-          final selected = dayNum == _selectedDay;
-          final date = widget.trip.startDate.add(Duration(days: i));
-          return Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedDay = dayNum),
-              child: Container(
-                width: 56,
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                decoration: BoxDecoration(
-                  color: selected ? AppTheme.primary : AppTheme.background,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'D$dayNum',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: selected ? Colors.white : AppTheme.textPrimary,
-                        fontWeight: FontWeight.w500,
+        children: [
+          // 待定池 Tab
+          _buildPendingTab(pendingCount),
+          const SizedBox(width: 6),
+          const SizedBox(
+            height: 40,
+            child: VerticalDivider(width: 1, color: AppTheme.border),
+          ),
+          const SizedBox(width: 6),
+          // 各天 Tab
+          ...List.generate(_totalDays, (i) {
+            final dayNum = i + 1;
+            final selected = dayNum == _selectedDay;
+            final date = widget.trip.startDate.add(Duration(days: i));
+            return Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: GestureDetector(
+                onTap: () => setState(() => _selectedDay = dayNum),
+                child: Container(
+                  width: 56,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  decoration: BoxDecoration(
+                    color: selected ? AppTheme.primary : AppTheme.background,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'D$dayNum',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: selected ? Colors.white : AppTheme.textPrimary,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      dateFmt.format(date),
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: selected
-                            ? Colors.white.withValues(alpha: 0.85)
-                            : AppTheme.textSecondary,
+                      const SizedBox(height: 1),
+                      Text(
+                        dateFmt.format(date),
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: selected
+                              ? Colors.white.withValues(alpha: 0.85)
+                              : AppTheme.textSecondary,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        }),
+            );
+          }),
+        ],
       ),
     );
   }
 
+Widget _buildPendingTab(int count) {
+  final selected = _selectedDay == 0;
+  return GestureDetector(
+    onTap: () => setState(() => _selectedDay = 0),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: selected ? AppTheme.primary : AppTheme.primaryBg,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.bookmark_outline,
+            size: 14,
+            color: selected ? Colors.white : AppTheme.primary,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '待定',
+            style: TextStyle(
+              fontSize: 12,
+              color: selected ? Colors.white : AppTheme.primary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          if (count > 0) ...[
+            const SizedBox(width: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: selected ? Colors.white : AppTheme.primary,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: selected ? AppTheme.primary : Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
+}
+
   Widget _buildEmpty() {
+    final isPending = _selectedDay == 0;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -249,13 +410,13 @@ class _TripDetailPageState extends ConsumerState<TripDetailPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.event_note_outlined,
+              isPending ? Icons.bookmark_outline : Icons.event_note_outlined,
               size: 56,
               color: AppTheme.primary.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 12),
             Text(
-              'D$_selectedDay 还没有安排',
+              isPending ? '待定池是空的' : 'D$_selectedDay 还没有安排',
               style: const TextStyle(
                 fontSize: 14,
                 color: AppTheme.textPrimary,
@@ -263,10 +424,14 @@ class _TripDetailPageState extends ConsumerState<TripDetailPage> {
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              '点击右下角 + 添加第一个活动',
-              style: TextStyle(
-                  fontSize: 11, color: AppTheme.textSecondary),
+            Text(
+              isPending
+                  ? '收集还没决定哪天的候选活动'
+                  : '点击右下角 + 添加第一个活动',
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppTheme.textSecondary,
+              ),
             ),
           ],
         ),

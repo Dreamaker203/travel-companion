@@ -6,12 +6,14 @@ class ActivityTile extends StatelessWidget {
   final TripActivity activity;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final Widget? trailing;
 
   const ActivityTile({
     super.key,
     required this.activity,
     this.onTap,
     this.onLongPress,
+    this.trailing,
   });
 
   @override
@@ -154,6 +156,7 @@ class ActivityTile extends StatelessWidget {
                 ),
               ),
             ),
+          ?trailing,
           ],
         ),
       ),

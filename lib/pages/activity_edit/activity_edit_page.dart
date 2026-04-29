@@ -29,6 +29,7 @@ class _ActivityEditPageState extends ConsumerState<ActivityEditPage> {
   late TextEditingController _costController;
   late TextEditingController _durationController;
   TimeOfDay? _startTime;
+  late bool _isPending; // 是否在待定池
 
   bool _saving = false;
 
@@ -59,6 +60,7 @@ class _ActivityEditPageState extends ConsumerState<ActivityEditPage> {
         );
       }
     }
+    _isPending = (e?.dayNumber == 0) || widget.dayNumber == 0;
   }
 
   @override
@@ -105,13 +107,14 @@ class _ActivityEditPageState extends ConsumerState<ActivityEditPage> {
           estimatedCost: cost,
           durationMinutes: duration,
           startTime: timeStr,
+          dayNumber: _isPending ? 0 : (widget.existing!.dayNumber == 0 ? widget.dayNumber : widget.existing!.dayNumber),
         );
        await ref
       .read(activityListProvider(widget.tripId).notifier)
       .updateActivity(updated); 
       } else {
         await ref.read(activityListProvider(widget.tripId).notifier).createActivity(
-              dayNumber: widget.dayNumber,
+              dayNumber: _isPending ? 0 : widget.dayNumber,
               title: _titleController.text.trim(),
               type: _type,
               location: _locationController.text.trim(),
@@ -203,6 +206,59 @@ class _ActivityEditPageState extends ConsumerState<ActivityEditPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // 待定池开关
+          Container(
+            margin: const EdgeInsets.only(bottom: 18),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: _isPending ? AppTheme.primaryBg : Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: _isPending ? AppTheme.primary : AppTheme.border,
+                width: 0.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.bookmark_outline,
+                  size: 18,
+                  color: _isPending ? AppTheme.primary : AppTheme.textSecondary,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '放入待定池',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: _isPending
+                              ? AppTheme.primary
+                              : AppTheme.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _isPending ? '收集中，未决定具体日期' : '安排在 D${widget.dayNumber}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: _isPending,
+                  activeThumbColor: AppTheme.primary,
+                  onChanged: (v) => setState(() => _isPending = v),
+                ),
+              ],
+            ),
+          ),
           _buildLabel('活动类型'),
           _buildTypeSelector(),
           const SizedBox(height: 18),

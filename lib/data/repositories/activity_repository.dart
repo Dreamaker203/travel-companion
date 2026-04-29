@@ -30,6 +30,19 @@ class ActivityRepository {
     return rows.map(_toModel).toList();
   }
 
+  // 查询待定池活动（dayNumber = 0）
+Future<List<TripActivity>> getCandidateActivities(String tripId) async {
+  return getActivitiesByDay(tripId, 0);
+}
+
+// 把活动移到指定天（或移到待定池，dayNumber=0）
+Future<void> moveActivityToDay(String activityId, int newDayNumber) async {
+  await (_db.update(_db.activities)..where((a) => a.id.equals(activityId)))
+      .write(db.ActivitiesCompanion(
+    dayNumber: Value(newDayNumber),
+  ));
+}
+
   // 新建活动
   Future<TripActivity> createActivity({
     required String tripId,

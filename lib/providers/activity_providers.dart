@@ -56,6 +56,13 @@ class ActivityListNotifier
     await repo.deleteActivity(id);
     ref.invalidateSelf();
   }
+
+    // 移动活动到另一天（或待定池 dayNumber=0）
+  Future<void> moveActivityToDay(String activityId, int newDayNumber) async {
+    final repo = ref.read(activityRepoProvider);
+    await repo.moveActivityToDay(activityId, newDayNumber);
+    ref.invalidateSelf();
+  }
 }
 
 // 关键变化在这里：family 的写法
