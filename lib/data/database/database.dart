@@ -38,13 +38,39 @@ class Activities extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// ============= 支出表 =============
+class Expenses extends Table {
+  TextColumn get id => text()();
+  TextColumn get tripId => text().references(Trips, #id)();
+  TextColumn get activityId => text().nullable()(); // 可选关联活动
+  RealColumn get amount => real()();
+  TextColumn get currency => text().withDefault(const Constant('CNY'))();
+  TextColumn get category => text().withDefault(const Constant('other'))();
+  TextColumn get note => text().withDefault(const Constant(''))();
+  DateTimeColumn get occurredAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // ============= 数据库类 =============
-@DriftDatabase(tables: [Trips, Activities])
+@DriftDatabase(tables: [Trips, Activities, Expenses])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (migrator, from, to) async {
+          if (from < 2) {
+            // 从 v1 升到 v2：创建 expenses 表
+            await migrator.createTable(expenses);
+          }
+        },
+      );
 
   static QueryExecutor _openConnection() {
     return driftDatabase(name: 'travel_companion');

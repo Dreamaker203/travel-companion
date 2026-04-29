@@ -8,6 +8,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/pdf_exporter.dart';
 import '../../widgets/activity_tile.dart';
 import '../activity_edit/activity_edit_page.dart';
+import '../budget/budget_page.dart';
 
 class TripDetailPage extends ConsumerStatefulWidget {
   final Trip trip;
@@ -47,7 +48,7 @@ class _TripDetailPageState extends ConsumerState<TripDetailPage> {
       ),
     );
   }
-  
+
   Future<void> _onMoveToDay(TripActivity act) async {
   final selected = await showModalBottomSheet<int>(
     context: context,
@@ -185,6 +186,18 @@ class _TripDetailPageState extends ConsumerState<TripDetailPage> {
         ),
         toolbarHeight: 64,
         actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BudgetPage(trip: widget.trip),
+                ),
+              );
+            },
+            icon: const Icon(Icons.account_balance_wallet_outlined, size: 20),
+            tooltip: '预算',
+          ),
           IconButton(
             onPressed: () {
               activitiesAsync.whenData((list) => _onExportPdf(list));
