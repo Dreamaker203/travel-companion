@@ -4,13 +4,14 @@ import 'theme/app_theme.dart';
 import 'data/app_data.dart';
 import 'pages/trip_list/trip_list_page.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   // 初始化中文日期格式
   initializeDateFormattingForChinese();
   AppData().init();
-  runApp(const TravelCompanionApp());
+  runApp(const ProviderScope(child: TravelCompanionApp()));
 }
 
 void initializeDateFormattingForChinese() {

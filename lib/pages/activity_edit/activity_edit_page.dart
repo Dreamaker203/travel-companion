@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../data/app_data.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/activity_providers.dart';
 import '../../models/activity.dart';
 import '../../theme/app_theme.dart';
 
-class ActivityEditPage extends StatefulWidget {
+class ActivityEditPage extends ConsumerStatefulWidget {
   final String tripId;
   final int dayNumber;
-  final TripActivity? existing; // 不为空表示编辑
+  final TripActivity? existing;
 
   const ActivityEditPage({
     super.key,
@@ -16,10 +17,11 @@ class ActivityEditPage extends StatefulWidget {
   });
 
   @override
-  State<ActivityEditPage> createState() => _ActivityEditPageState();
+  ConsumerState<ActivityEditPage> createState() =>
+      _ActivityEditPageState();
 }
 
-class _ActivityEditPageState extends State<ActivityEditPage> {
+class _ActivityEditPageState extends ConsumerState<ActivityEditPage> {
   late ActivityType _type;
   late TextEditingController _titleController;
   late TextEditingController _locationController;
@@ -104,10 +106,11 @@ class _ActivityEditPageState extends State<ActivityEditPage> {
           durationMinutes: duration,
           startTime: timeStr,
         );
-        await AppData().activityRepo.updateActivity(updated);
+       await ref
+      .read(activityListProvider(widget.tripId).notifier)
+      .updateActivity(updated); 
       } else {
-        await AppData().activityRepo.createActivity(
-              tripId: widget.tripId,
+        await ref.read(activityListProvider(widget.tripId).notifier).createActivity(
               dayNumber: widget.dayNumber,
               title: _titleController.text.trim(),
               type: _type,
@@ -150,7 +153,9 @@ class _ActivityEditPageState extends State<ActivityEditPage> {
       ),
     );
     if (confirmed == true) {
-      await AppData().activityRepo.deleteActivity(widget.existing!.id);
+      await ref
+      .read(activityListProvider(widget.tripId).notifier)
+      .deleteActivity(widget.existing!.id);
       if (mounted) Navigator.pop(context, true);
     }
   }

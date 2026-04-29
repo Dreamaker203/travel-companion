@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../data/app_data.dart';
+import '../../providers/trip_providers.dart';
 import '../../theme/app_theme.dart';
 
-class TripCreatePage extends StatefulWidget {
+class TripCreatePage extends ConsumerStatefulWidget {
   const TripCreatePage({super.key});
 
   @override
-  State<TripCreatePage> createState() => _TripCreatePageState();
+  ConsumerState<TripCreatePage> createState() => _TripCreatePageState();
 }
 
-class _TripCreatePageState extends State<TripCreatePage> {
+class _TripCreatePageState extends ConsumerState<TripCreatePage> {
   final _titleController = TextEditingController();
   final _destinationController = TextEditingController();
   final _budgetController = TextEditingController();
@@ -60,7 +61,7 @@ class _TripCreatePageState extends State<TripCreatePage> {
     setState(() => _saving = true);
     try {
       final budget = double.tryParse(_budgetController.text) ?? 0;
-      await AppData().tripRepo.createTrip(
+      await ref.read(tripListProvider.notifier).createTrip(
             title: _titleController.text.trim(),
             destination: _destinationController.text.trim(),
             startDate: _startDate,

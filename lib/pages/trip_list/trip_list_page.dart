@@ -1,78 +1,20 @@
 import 'package:flutter/material.dart';
-import '../../data/app_data.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/trip.dart';
+import '../../providers/trip_providers.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/trip_card.dart';
 import '../trip_create/trip_create_page.dart';
 import '../trip_detail/trip_detail_page.dart';
 
-class TripListPage extends StatefulWidget {
+class TripListPage extends ConsumerWidget {
   const TripListPage({super.key});
 
   @override
-  State<TripListPage> createState() => _TripListPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tripsAsync = ref.watch(tripListProvider);
+    final filter = ref.watch(tripFilterProvider);
 
-class _TripListPageState extends State<TripListPage> {
-  List<Trip> _trips = [];
-  bool _loading = true;
-  String _filter = 'all'; // all / planning / ongoing / completed
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTrips();
-  }
-
-  Future<void> _loadTrips() async {
-    setState(() => _loading = true);
-    final trips = _filter == 'all'
-        ? await AppData().tripRepo.getAllTrips()
-        : await AppData().tripRepo.getTripsByStatus(_filter);
-    if (mounted) {
-      setState(() {
-        _trips = trips;
-        _loading = false;
-      });
-    }
-  }
-
-  Future<void> _onTapNew() async {
-    final created = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(builder: (_) => const TripCreatePage()),
-    );
-    if (created == true) {
-      _loadTrips();
-    }
-  }
-
-  Future<void> _confirmDelete(Trip trip) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('删除旅行'),
-        content: Text('确定要删除"${trip.title}"吗？此操作不可恢复。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('删除', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true) {
-      await AppData().tripRepo.deleteTrip(trip.id);
-      _loadTrips();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Padding(
@@ -104,20 +46,48 @@ class _TripListPageState extends State<TripListPage> {
       ),
       body: Column(
         children: [
-          _buildFilterTabs(),
+          _FilterTabs(currentFilter: filter),
           const SizedBox(height: 4),
-          Expanded(child: _buildContent()),
+          Expanded(
+            child: tripsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    '加载失败：$e',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+              ),
+              data: (trips) =>
+                  trips.isEmpty ? const _Empty() : _TripList(trips: trips),
+            ),
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _onTapNew,
+        onPressed: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const TripCreatePage()),
+          );
+          // 不需要手动刷新——Provider 会自动同步
+        },
         backgroundColor: AppTheme.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
+}
 
-  Widget _buildFilterTabs() {
+// ============= 子组件：筛选标签 =============
+class _FilterTabs extends ConsumerWidget {
+  final String currentFilter;
+  const _FilterTabs({required this.currentFilter});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final filters = [
       ('all', '全部'),
       ('planning', '规划中'),
@@ -130,17 +100,15 @@ class _TripListPageState extends State<TripListPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: filters.map((f) {
-          final selected = f.$1 == _filter;
+          final selected = f.$1 == currentFilter;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: GestureDetector(
-              onTap: () {
-                setState(() => _filter = f.$1);
-                _loadTrips();
-              },
+              onTap: () =>
+                  ref.read(tripFilterProvider.notifier).setFilter(f.$1),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
                   color: selected ? AppTheme.primary : Colors.transparent,
                   borderRadius: BorderRadius.circular(14),
@@ -154,7 +122,8 @@ class _TripListPageState extends State<TripListPage> {
                   style: TextStyle(
                     fontSize: 12,
                     color: selected ? Colors.white : AppTheme.textSecondary,
-                    fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
+                    fontWeight:
+                        selected ? FontWeight.w500 : FontWeight.w400,
                   ),
                 ),
               ),
@@ -164,36 +133,63 @@ class _TripListPageState extends State<TripListPage> {
       ),
     );
   }
+}
 
-  Widget _buildContent() {
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_trips.isEmpty) {
-      return _buildEmpty();
-    }
+// ============= 子组件：旅行列表 =============
+class _TripList extends ConsumerWidget {
+  final List<Trip> trips;
+  const _TripList({required this.trips});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 80),
-      itemCount: _trips.length,
+      itemCount: trips.length,
       itemBuilder: (ctx, i) {
-        final trip = _trips[i];
+        final trip = trips[i];
         return TripCard(
           trip: trip,
-          onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => TripDetailPage(trip: trip)),
-            );
-            // 从详情页回来后刷新一下，可能修改了什么
-            _loadTrips();
-          },
-          onLongPress: () => _confirmDelete(trip),
+          onTap: () => Navigator.push(
+            ctx,
+            MaterialPageRoute(builder: (_) => TripDetailPage(trip: trip)),
+          ),
+          onLongPress: () => _confirmDelete(ctx, ref, trip),
         );
       },
     );
   }
 
-  Widget _buildEmpty() {
+  Future<void> _confirmDelete(
+      BuildContext context, WidgetRef ref, Trip trip) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('删除旅行'),
+        content: Text('确定要删除"${trip.title}"吗？此操作不可恢复。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('删除', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await ref.read(tripListProvider.notifier).deleteTrip(trip.id);
+    }
+  }
+}
+
+// ============= 子组件：空状态 =============
+class _Empty extends StatelessWidget {
+  const _Empty();
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
